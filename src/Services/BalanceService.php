@@ -19,15 +19,20 @@ class BalanceService
      * List all balances for a profile
      *
      * @param int $profileId
+     * @param string|null $type Filter balances by type (e.g., 'STANDARD')
      * @return array
      */
-    public function listBalances(int $profileId): array
+    public function listBalances(int $profileId, ?string $type = null): array
     {
-        return $this->client->get("v4/profiles/{$profileId}/balances");
+        $params = [];
+        if ($type) {
+            $params['types'] = $type;
+        }
+        return $this->client->get("v4/profiles/{$profileId}/balances", $params);
     }
 
     /**
-     * Get a specific balance
+     * Get a specific balance by ID
      *
      * @param int $profileId
      * @param int $balanceId

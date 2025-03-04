@@ -4,6 +4,7 @@ namespace Lai3221\LaravelWise\Providers;
 
 use Lai3221\LaravelWise\Client;
 use Lai3221\LaravelWise\Services\BalanceService;
+use Lai3221\LaravelWise\Services\ProfileService;
 use Illuminate\Support\ServiceProvider;
 
 class WiseServiceProvider extends ServiceProvider
@@ -24,6 +25,11 @@ class WiseServiceProvider extends ServiceProvider
         // Register the balance service
         $this->app->singleton(BalanceService::class, function ($app) {
             return new BalanceService($app->make(Client::class));
+        });
+
+        // Register the profile service
+        $this->app->singleton(ProfileService::class, function ($app) {
+            return new ProfileService($app->make(Client::class));
         });
     }
 

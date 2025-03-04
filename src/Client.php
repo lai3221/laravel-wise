@@ -11,12 +11,44 @@ use Lai3221\LaravelWise\Exceptions\ValidationException;
 
 class Client
 {
+    /**
+     * Base URL for the API
+     *
+     * @var string
+     */
     protected $baseUrl;
+
+    /**
+     * API Key for authentication
+     *
+     * @var string
+     */
     protected $apiKey;
+
+    /**
+     * API Version
+     *
+     * @var string
+     */
     protected $version;
+
+    /**
+     * Request timeout in seconds
+     *
+     * @var int
+     */
     protected $timeout;
+
+    /**
+     * Default headers for all requests
+     *
+     * @var array
+     */
     protected $headers;
 
+    /**
+     * Create a new Client instance
+     */
     public function __construct()
     {
         $this->baseUrl = config('wise.base_url.' . config('wise.environment'));
@@ -33,11 +65,18 @@ class Client
      * Get the full URL for the API endpoint
      *
      * @param string $endpoint
+     * @param array $params
      * @return string
      */
-    protected function getUrl(string $endpoint): string
+    protected function getUrl(string $endpoint, array $params = []): string
     {
-        return "{$this->baseUrl}/{$endpoint}";
+        $url = "{$this->baseUrl}/{$endpoint}";
+
+        if (!empty($params)) {
+            $url .= '?' . http_build_query($params);
+        }
+
+        return $url;
     }
 
     /**
@@ -59,7 +98,6 @@ class Client
                 return $this->makeRequest('get', $endpoint, $params, null, $headers);
             });
         }
-
         return $this->makeRequest('get', $endpoint, $params, null, $headers);
     }
 
@@ -131,15 +169,12 @@ class Client
      */
     protected function makeRequest(string $method, string $endpoint, array $params = [], ?array $data = null, array $additionalHeaders = []): array
     {
-        $url = $this->getUrl($endpoint);
-        
+        $url = $this->getUrl($endpoint, $params);
         $headers = array_merge($this->headers, $additionalHeaders);
-        $request = Http::withHeaders($headers)
-            ->timeout($this->timeout);
 
-        if ($method === 'get' && !empty($params)) {
-            $request->withQueryParameters($params);
-        }
+        $request = Http::withHeaders($headers)
+            ->timeout($this->timeout)
+            ->retry(3, 100); // Retry failed requests up to 3 times with 100ms delay
 
         if (in_array($method, ['post', 'put', 'patch']) && $data !== null) {
             $request->withBody(json_encode($data), 'application/json');
@@ -165,6 +200,8 @@ class Client
     protected function handleRequestError(int $statusCode, ?array $responseBody): void
     {
         $message = $responseBody['error'] ?? $responseBody['message'] ?? 'Unknown error';
+        $errorCode = $responseBody['code'] ?? null;
+        $details = $responseBody['details'] ?? null;
 
         switch ($statusCode) {
             case 401:
@@ -177,4 +214,4 @@ class Client
                 throw new ApiException($message, $statusCode, $responseBody);
         }
     }
-} 
+}
