@@ -2,15 +2,17 @@
 
 namespace Lai3221\LaravelWise\Services;
 
+use Lai3221\LaravelWise\BaseService;
 use Lai3221\LaravelWise\Client;
 use Ramsey\Uuid\Uuid;
 
-class ProfileService extends \App\Services\Wise\ProfileService
+class ProfileService extends BaseService
 {
     protected Client $client;
 
     public function __construct(Client $client)
     {
+        parent::__construct($client);
         $this->client = $client;
     }
 

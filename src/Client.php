@@ -47,16 +47,30 @@ class Client
     protected $headers;
 
     /**
-     * Create a new Client instance
+     * Proxy configuration
+     *
+     * @var array|null
      */
-    public function __construct()
+    protected $proxy;
+
+    /**
+     * Create a new Client instance
+     *
+     * @param string|null $apiKey
+     * @param array|null $proxy
+     */
+    public function __construct($apiKey = null, $proxy = null)
     {
+        $finalApiKey = $apiKey ?? config('wise.api_key');
+        $finalProxy = $proxy ?? config('wise.proxy');
         $this->baseUrl = config('wise.base_url.' . config('wise.environment'));
-        $this->apiKey = config('wise.api_key');
+        $this->apiKey = $finalApiKey;
         $this->version = config('wise.version');
         $this->timeout = config('wise.timeout');
+        $this->proxy = $finalProxy;
+
         $this->headers = [
-            'Authorization' => "Bearer {$this->apiKey}",
+            'Authorization' => "Bearer {$finalApiKey}",
             'Content-Type' => 'application/json',
         ];
     }
@@ -171,10 +185,16 @@ class Client
     {
         $url = $this->getUrl($endpoint, $params);
         $headers = array_merge($this->headers, $additionalHeaders);
-
         $request = Http::withHeaders($headers)
             ->timeout($this->timeout)
             ->retry(3, 100); // Retry failed requests up to 3 times with 100ms delay
+
+        // 添加代理配置
+        if ($this->proxy) {
+            $request->withOptions([
+                'proxy' => $this->proxy
+            ]);
+        }
 
         if (in_array($method, ['post', 'put', 'patch']) && $data !== null) {
             $request->withBody(json_encode($data), 'application/json');

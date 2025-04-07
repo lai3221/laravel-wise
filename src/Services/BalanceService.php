@@ -2,16 +2,18 @@
 
 namespace Lai3221\LaravelWise\Services;
 
+use Lai3221\LaravelWise\BaseService;
 use Lai3221\LaravelWise\Client;
 use Illuminate\Support\Facades\Cache;
 use Ramsey\Uuid\Uuid;
 
-class BalanceService
+class BalanceService extends BaseService
 {
-    protected $client;
+    protected Client $client;
 
     public function __construct(Client $client)
     {
+        parent::__construct($client);
         $this->client = $client;
     }
 
@@ -52,8 +54,12 @@ class BalanceService
      * @param string|null $name
      * @return array
      */
-    public function createBalance(int $profileId, string $currency, string $type = 'STANDARD', ?string $name = null): array
-    {
+    public function createBalanceAccount(
+        int $profileId,
+        string $currency,
+        string $type = 'STANDARD',
+        ?string $name = null
+    ): array {
         $data = [
             'currency' => $currency,
             'type' => $type,
@@ -87,8 +93,11 @@ class BalanceService
      */
     public function convertBalance(int $profileId, string $quoteId): array
     {
+        $idempotenceUuid = Uuid::uuid4()->toString();
         return $this->client->post("v2/profiles/{$profileId}/balance-movements", [
             'quoteId' => $quoteId
+        ], [
+            'X-idempotence-uuid' => $idempotenceUuid
         ]);
     }
 
@@ -103,9 +112,9 @@ class BalanceService
      * @return array
      */
     public function moveBalance(
-        int $profileId, 
-        int $sourceBalanceId, 
-        int $targetBalanceId, 
+        int $profileId,
+        int $sourceBalanceId,
+        int $targetBalanceId,
         array $amount,
         ?string $quoteId = null
     ): array {
@@ -149,4 +158,4 @@ class BalanceService
             'recipientId' => $recipientId
         ]);
     }
-} 
+}

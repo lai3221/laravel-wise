@@ -23,8 +23,11 @@ return [
         'live' => 'https://api.wise.com',
     ],
 
+    // Request if using a proxy
+    'proxy' => '',
+
     'version' => 'v1',
 
     // Request timeout in seconds
     'timeout' => env('WISE_TIMEOUT', 30),
-]; 
+];
