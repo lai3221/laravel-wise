@@ -75,14 +75,35 @@ class RecipientService extends BaseService
     /**
      * Retrieve recipient account requirements dynamically
      *
-     * @param int $quoteId
+     * @param string $quoteId
      * @return array
      */
-    public function getRequirements(int $quoteId): array
+    public function getRequirements(string $quoteId): array
     {
-        return $this->client->get("v1/quotes/{$quoteId}/account-requirements");
+        return $this->client->get("v1/quotes/{$quoteId}/account-requirements", [], [
+            'Accept-Minor-Version' => 1
+        ]);
     }
 
+    /**
+     * Retrieve recipient account requirements dynamically
+     *
+     * @param string $quoteId
+     * @return array
+     */
+    public function postRequirements(string $quoteId, array $data): array
+    {
+        return $this->client->post("v1/quotes/{$quoteId}/account-requirements", $data, [
+            'Accept-Minor-Version' => 1
+        ]);
+    }
+
+    /**
+     * Get account requirements dynamically
+     *
+     * @param string $target
+     * @return array
+     */
     public function getAccountRequirements(string $target): array
     {
         return $this->client->get("v1/account-requirements?source=SGD&target={$target}&sourceAmount=1000");

@@ -102,7 +102,7 @@ class TransferService extends BaseService
      * @param int $transferId
      * @return string PDF content
      */
-    public function getTransferReceipt(int $transferId): string
+    public function getTransferPdf(int $transferId): string
     {
         return $this->client->get("v1/transfers/{$transferId}/receipt.pdf");
     }

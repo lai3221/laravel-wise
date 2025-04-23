@@ -124,7 +124,7 @@ class Client
      * @return array
      * @throws ApiException|AuthenticationException|ValidationException|NotFoundException
      */
-    public function post(string $endpoint, array $data, array $headers = []): array
+    public function post(string $endpoint, ?array $data, array $headers = []): array
     {
         return $this->makeRequest('post', $endpoint, [], $data, $headers);
     }
@@ -189,7 +189,7 @@ class Client
             ->timeout($this->timeout)
             ->retry(3, 100); // Retry failed requests up to 3 times with 100ms delay
 
-        // 添加代理配置
+        // Add proxy
         if ($this->proxy) {
             $request->withOptions([
                 'proxy' => $this->proxy
