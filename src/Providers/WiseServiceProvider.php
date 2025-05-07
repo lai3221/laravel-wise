@@ -4,7 +4,9 @@ namespace Lai3221\LaravelWise\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Lai3221\LaravelWise\Client;
+use Lai3221\LaravelWise\Services\ActivityService;
 use Lai3221\LaravelWise\Services\BalanceService;
+use Lai3221\LaravelWise\Services\BalanceStatementService;
 use Lai3221\LaravelWise\Services\ProfileService;
 use Lai3221\LaravelWise\Services\QuoteService;
 use Lai3221\LaravelWise\Services\RecipientService;
@@ -44,9 +46,20 @@ class WiseServiceProvider extends ServiceProvider
         $this->app->bind(QuoteService::class, function ($app) {
             return new QuoteService($app->make(Client::class));
         });
+
         // Register the transfer service
         $this->app->bind(TransferService::class, function ($app) {
             return new TransferService($app->make(Client::class));
+        });
+
+        // Register the activity service
+        $this->app->bind(ActivityService::class, function ($app) {
+            return new ActivityService($app->make(Client::class));
+        });
+
+        // Register the balance statement service
+        $this->app->bind(BalanceStatementService::class, function ($app) {
+            return new BalanceStatementService($app->make(Client::class));
         });
     }
 
