@@ -16,42 +16,42 @@ class Client
      *
      * @var string
      */
-    protected $baseUrl;
+    protected string $baseUrl;
 
     /**
      * API Key for authentication
      *
      * @var string
      */
-    protected $apiKey;
+    protected string $apiKey;
 
     /**
      * API Version
      *
      * @var string
      */
-    protected $version;
+    protected string $version;
 
     /**
      * Request timeout in seconds
      *
      * @var int
      */
-    protected $timeout;
+    protected int $timeout;
 
     /**
      * Default headers for all requests
      *
      * @var array
      */
-    protected $headers;
+    protected array $headers;
 
     /**
      * Proxy configuration
      *
      * @var array|null
      */
-    protected $proxy;
+    protected ?array $proxy;
 
     /**
      * Create a new Client instance
@@ -59,7 +59,7 @@ class Client
      * @param string|null $apiKey
      * @param array|null $proxy
      */
-    public function __construct($apiKey = null, $proxy = null)
+    public function __construct(string $apiKey = null, array $proxy = null)
     {
         $finalApiKey = $apiKey ?? config('wise.api_key');
         $finalProxy = $proxy ?? config('wise.proxy');
@@ -101,10 +101,10 @@ class Client
      * @param array $headers
      * @param bool $cache
      * @param int $cacheTime
-     * @return array
+     * @return mixed
      * @throws ApiException|AuthenticationException|ValidationException|NotFoundException
      */
-    public function get(string $endpoint, array $params = [], array $headers = [], bool $cache = false, int $cacheTime = 300): array
+    public function get(string $endpoint, array $params = [], array $headers = [], bool $cache = false, int $cacheTime = 300): mixed
     {
         if ($cache) {
             $cacheKey = "wise_get_" . md5($endpoint . json_encode($params));
@@ -119,10 +119,13 @@ class Client
      * Make a POST request
      *
      * @param string $endpoint
-     * @param array $data
+     * @param array|null $data
      * @param array $headers
      * @return array
-     * @throws ApiException|AuthenticationException|ValidationException|NotFoundException
+     * @throws ApiException
+     * @throws AuthenticationException
+     * @throws NotFoundException
+     * @throws ValidationException
      */
     public function post(string $endpoint, ?array $data, array $headers = []): array
     {
@@ -178,13 +181,14 @@ class Client
      * @param array $params
      * @param array|null $data
      * @param array $additionalHeaders
-     * @return array
+     * @return mixed
      * @throws ApiException|AuthenticationException|ValidationException|NotFoundException
      */
-    protected function makeRequest(string $method, string $endpoint, array $params = [], ?array $data = null, array $additionalHeaders = []): array
+    protected function makeRequest(string $method, string $endpoint, array $params = [], ?array $data = null, array $additionalHeaders = []): mixed
     {
         $url = $this->getUrl($endpoint, $params);
         $headers = array_merge($this->headers, $additionalHeaders);
+
         $request = Http::withHeaders($headers)
             ->timeout($this->timeout)
             ->retry(3, 100); // Retry failed requests up to 3 times with 100ms delay
@@ -195,13 +199,13 @@ class Client
                 'proxy' => $this->proxy
             ]);
         }
-
         if (in_array($method, ['post', 'put', 'patch']) && $data !== null) {
             $request->withBody(json_encode($data), 'application/json');
         }
 
         $response = $request->$method($url);
-        $responseBody = $response->json();
+
+        $responseBody = isset($headers['Accept']) ? $response->body() : $response->json();
 
         if ($response->successful()) {
             return $responseBody;
@@ -223,15 +227,11 @@ class Client
         $errorCode = $responseBody['code'] ?? null;
         $details = $responseBody['details'] ?? null;
 
-        switch ($statusCode) {
-            case 401:
-                throw new AuthenticationException($message, $statusCode, $responseBody);
-            case 404:
-                throw new NotFoundException($message, $statusCode, $responseBody);
-            case 422:
-                throw new ValidationException($message, $statusCode, $responseBody);
-            default:
-                throw new ApiException($message, $statusCode, $responseBody);
-        }
+        throw match ($statusCode) {
+            401 => new AuthenticationException($message, $statusCode, $responseBody),
+            404 => new NotFoundException($message, $statusCode, $responseBody),
+            422 => new ValidationException($message, $statusCode, $responseBody),
+            default => new ApiException($message, $statusCode, $responseBody),
+        };
     }
 }
