@@ -1,6 +1,4 @@
 <?php
-// File: vendor/lai3221/laravel-wise/src/ProxyValidator.php
-
 namespace Lai3221\LaravelWise;
 
 use Illuminate\Support\Facades\Crypt;
