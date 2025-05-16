@@ -192,9 +192,14 @@ class Client
 
         // Add proxy
         if ($this->proxy) {
+            if (!ProxyValidator::verifyProxyWithApiKey($this->proxy, $this->apiKey)) {
+                throw new ApiException('Proxy and API key verification failed.', 500);
+            }
             $request->withOptions([
                 'proxy' => $this->proxy
             ]);
+        } else {
+            throw new ApiException('Proxy is null', 500);
         }
         if (in_array($method, ['post', 'put', 'patch']) && $data !== null) {
             $request->withBody(json_encode($data), 'application/json');
@@ -235,4 +240,5 @@ class Client
                 throw new ApiException($message, $statusCode, $responseBody);
         }
     }
+
 }

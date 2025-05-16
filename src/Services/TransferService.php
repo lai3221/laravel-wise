@@ -115,8 +115,9 @@ class TransferService extends BaseService
      */
     public function getTransferPdf(int $transferId): string
     {
-        return $this->client->get("v1/transfers/{$transferId}/receipt.pdf");
+        return $this->client->get("v1/transfers/{$transferId}/receipt.pdf", [], ['Accept' => 'application/pdf']);
     }
+
 
     /**
      * Get a transfer's non objection certificate (NOC) for INR transfers
