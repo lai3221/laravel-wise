@@ -16,6 +16,17 @@ class TransferService extends BaseService
     }
 
     /**
+     * Get transfer requirements
+     *
+     * @param array $data Transfer requirement data
+     * @return array
+     */
+    public function requirement(array $data)
+    {
+        return $this->client->post('v1/transfer-requirements', $data);
+    }
+
+    /**
      * Create a transfer
      *
      * @param array $data Transfer data
