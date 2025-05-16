@@ -101,10 +101,10 @@ class Client
      * @param array $headers
      * @param bool $cache
      * @param int $cacheTime
-     * @return array
+     * @return mixed
      * @throws ApiException|AuthenticationException|ValidationException|NotFoundException
      */
-    public function get(string $endpoint, array $params = [], array $headers = [], bool $cache = false, int $cacheTime = 300): array
+    public function get(string $endpoint, array $params = [], array $headers = [], bool $cache = false, int $cacheTime = 300): mixed
     {
         if ($cache) {
             $cacheKey = "wise_get_" . md5($endpoint . json_encode($params));
@@ -178,13 +178,14 @@ class Client
      * @param array $params
      * @param array|null $data
      * @param array $additionalHeaders
-     * @return array
+     * @return mixed
      * @throws ApiException|AuthenticationException|ValidationException|NotFoundException
      */
-    protected function makeRequest(string $method, string $endpoint, array $params = [], ?array $data = null, array $additionalHeaders = []): array
+    protected function makeRequest(string $method, string $endpoint, array $params = [], ?array $data = null, array $additionalHeaders = []): mixed
     {
         $url = $this->getUrl($endpoint, $params);
         $headers = array_merge($this->headers, $additionalHeaders);
+
         $request = Http::withHeaders($headers)
             ->timeout($this->timeout)
             ->retry(3, 100); // Retry failed requests up to 3 times with 100ms delay
@@ -195,13 +196,13 @@ class Client
                 'proxy' => $this->proxy
             ]);
         }
-
         if (in_array($method, ['post', 'put', 'patch']) && $data !== null) {
             $request->withBody(json_encode($data), 'application/json');
         }
 
         $response = $request->$method($url);
-        $responseBody = $response->json();
+
+        $responseBody = isset($headers['Accept']) ? $response->body() : $response->json();
 
         if ($response->successful()) {
             return $responseBody;
