@@ -104,7 +104,7 @@ class TransferService extends BaseService
      */
     public function cancelTransfer(int $transferId): array
     {
-        return $this->client->put("v1/transfers/{$transferId}/cancel");
+        return $this->client->put("v1/transfers/{$transferId}/cancel", []);
     }
 
     /**
